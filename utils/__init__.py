@@ -1,10 +1,6 @@
-"""
-Utils package for RL Stock Trading System
-"""
-
 from .data_preprocessing import (
     load_json_data, prepare_rl_data, create_state_representation, 
-    prepare_daily_news, create_demo_data
+    prepare_daily_news
 )
 from .technical_indicators import (
     calculate_rsi, calculate_sma, calculate_volatility,
@@ -17,7 +13,6 @@ __all__ = [
     'prepare_rl_data', 
     'create_state_representation',
     'prepare_daily_news',
-    'create_demo_data',
     'calculate_rsi',
     'calculate_sma',
     'calculate_volatility',
