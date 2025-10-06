@@ -1,0 +1,42 @@
+# Cron Job Examples for Morning Trading Analysis
+# Add these lines to your crontab (crontab -e)
+
+# Run every morning at 9:00 AM (before market opens)
+# This gives you a trading recommendation to start the day
+0 9 * * * /usr/bin/flock -n /tmp/morning_trader.lock /home/mimik/Stock_AI/run_morning_trader.sh >> /home/mimik/morning_trader.log 2>&1
+
+# Run every 30 minutes during market hours (9:30 AM - 4:00 PM EST, weekdays only)
+# This provides updated analysis throughout the trading day
+30 9-15 * * 1-5 /usr/bin/flock -n /tmp/morning_trader.lock /home/mimik/Stock_AI/run_morning_trader.sh >> /home/mimik/morning_trader.log 2>&1
+0 10-15 * * 1-5 /usr/bin/flock -n /tmp/morning_trader.lock /home/mimik/Stock_AI/run_morning_trader.sh >> /home/mimik/morning_trader.log 2>&1
+
+# Run your existing evening trading (actual trades + training) every 5 minutes
+# This is separate from morning analysis and does the actual trading
+*/5 * * * * /usr/bin/flock -n /tmp/stock_ai_trading.lock sh -c 'for d in /home/mimik/Stock_AI/*/; do (cd "$d" && /home/mimik/Stock_AI/.venv/bin/python3 trading_runner.py); done' >> /home/mimik/con.log 2>&1
+
+# Alternative: Run evening trading once per hour at minute 5
+# 5 * * * * /usr/bin/flock -n /tmp/stock_ai_trading.lock sh -c 'for d in /home/mimik/Stock_AI/*/; do (cd "$d" && /home/mimik/Stock_AI/.venv/bin/python3 trading_runner.py); done' >> /home/mimik/con.log 2>&1
+
+#############################################
+# Explanation:
+#############################################
+# 
+# Morning Analysis (morning_trader.py):
+# - Fetches fresh data
+# - Gets AI trading recommendation  
+# - Updates today.json with analysis
+# - Does NOT train the model
+# - Does NOT execute actual trades
+#
+# Evening Trading (trading_runner.py):
+# - Uses existing system
+# - Executes actual trades
+# - Trains the model with new experiences
+# - Updates portfolio and logs
+#
+# Benefits of this separation:
+# - Morning: Get insights before trading
+# - Evening: Execute trades based on full day's data
+# - Prevents duplicate trades
+# - Allows manual decision making based on morning analysis
+#############################################
