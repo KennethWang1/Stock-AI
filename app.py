@@ -34,7 +34,6 @@ def get_results():
                 r = requests.get(f"https://api.polygon.io/v2/last/trade/{ticker}?apiKey={api_key}")
                 response = r.json()
                 data['morningAnalysis']['currentPrice'] = response.get('p', 0)
-                data['morningAnalysis']['currentPrice']
                 return flask.jsonify(data)
         return flask.jsonify({'error': f'No data found for ticker {ticker}'}), 404
     except Exception as e:

@@ -12,73 +12,6 @@ def log_message(message: str, log_file: Path):
         f.write(f"[{timestamp}] {message}\n")
     print(f"[{timestamp}] {message}")
 
-def update_today_json():
-    try:
-        ticker_folder = Path(f"./")
-        ticker_folder.mkdir(exist_ok=True)
-        
-        today_json_path = ticker_folder / "today.json"
-        
-        portfolio_data = check_portfolio_updates()
-        session_data = check_trading_sessions()
-        buffer_data = check_experience_buffer()
-        
-        today_data = {
-            "netProfit": 0.0,
-            "totalCapital": portfolio_data.get('portfolio_value', 0.0),
-            "lastAction": datetime.now().isoformat() + "Z",
-            "lastActionType": "UNKNOWN",
-            "lastActionAmount": 0,
-            "lastReturn": 0.0,
-            "lastActionValue": "0.0",
-            "lastReward": "0.0",
-            "ticker": STOCK_SYMBOL,
-            "lastUpdated": datetime.now().isoformat() + "Z",
-            "valuesLast30": [],
-            "traderLast30": []
-        }
-        
-        if "error" not in portfolio_data:
-            today_data["totalCapital"] = portfolio_data['portfolio_value']
-            initial_investment = 1500
-            today_data["netProfit"] = portfolio_data['portfolio_value'] - initial_investment
-        
-        if "error" not in session_data and session_data.get('sessions'):
-            latest_date = max(session_data['sessions'].keys())
-            latest_session = session_data['sessions'][latest_date]
-            
-            action = latest_session.get('action', 0.0)
-            today_data["lastReturn"] = latest_session.get('reward', 0.0)
-            today_data["lastReward"] = str(latest_session.get('reward', 0.0))
-            today_data["lastActionValue"] = str(abs(action))
-            
-            if action > 0.1:
-                today_data["lastActionType"] = "BUY"
-                today_data["lastActionAmount"] = int(abs(action) * 100)
-            elif action < -0.1:
-                today_data["lastActionType"] = "SELL" 
-                today_data["lastActionAmount"] = int(abs(action) * 100)
-            else:
-                today_data["lastActionType"] = "HOLD"
-                today_data["lastActionAmount"] = 0
-        
-        base_value = today_data["totalCapital"]
-        for i in range(30):
-            import random
-            variation = random.uniform(-0.05, 0.05)
-            value = base_value * (1 + variation * (29-i)/29)
-            today_data["valuesLast30"].append(round(value, 2))
-            today_data["traderLast30"].append(round(value * 0.9, 2))
-        
-        with open(today_json_path, 'w') as f:
-            json.dump(today_data, f, indent=4)
-        
-        return today_data
-        
-    except Exception as e:
-        print(f"Error updating today.json: {e}")
-        return None
-
 def check_trading_sessions():
     try:
         with open("trading_sessions.json", 'r') as f:
@@ -162,9 +95,7 @@ def main():
     try:
         from main import main as trading_main
         trading_main()
-        
-        update_today_json()
-        
+            
         log_message("Trading execution completed successfully", success_log)
         log_message(f"Check buffer status with: python buffer_manager.py info", success_log)
         log_message(f"Check trading history with: python trading_tracker.py history", success_log)
